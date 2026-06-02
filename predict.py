@@ -22,40 +22,46 @@ features = feature_info["features"]
 print("Modèle chargé")
 print(f"Nombre de features attendues : {len(features)}")
 
-# charger les données
-df = pd.read_csv(INPUT_FILE, sep=";", low_memory=False)
-
-print(f"Fichier chargé : {len(df)} lignes")
-
-# vérifier s'il y a des colonnes manquantes
-colonnes_manquantes = []
-
-for col in features:
-    if col not in df.columns:
-        colonnes_manquantes.append(col)
-
-if colonnes_manquantes:
-    raise ValueError(
-        "Certaines colonnes nécessaires au modèle sont absentes : "
-        + ", ".join(colonnes_manquantes)
-    )
 
 
-# garder uniquement les colonnes utilisées par le modèle
-X = df[features]
+
+def predict_file(input_file, output_file):
+    
+    df = pd.read_csv(input_file, sep=";", low_memory=False)
+    X = df[features]
+
+    predictions = model.predict(X)
+
+    df["prix_m2_vente_predit"] = predictions
+    df.to_csv(output_file, sep=";", index=False, encoding="utf-8")
+
+    return df
 
 
-# prédire
-predictions = model.predict(X)
+def predict_one(annonce: dict):
 
+    """    colonnes_manquantes = []
 
-# sauvegarder le résultat
-df["prix_m2_vente_predit"] = predictions
+    for col in features:
+        if col not in annonce:
+            colonnes_manquantes.append(col)
 
-df.to_csv(OUTPUT_FILE, sep=";", index=False, encoding="utf-8")
+    if colonnes_manquantes:
+        raise ValueError(
+            "Colonnes manquantes : " + ", ".join(colonnes_manquantes)
+        )
+    """
+    X = pd.DataFrame([annonce])
+    X = X[features]
 
-print("Prédictions terminées")
-print(f"Résultat sauvegardé ici : {OUTPUT_FILE}")
+    prediction = model.predict(X)[0]
 
-print("\nAperçu :")
-print(df[["prix_m2_vente_predit"]].head())
+    return round(float(prediction), 2)
+
+if __name__ == "__main__":
+    INPUT_FILE = os.path.join(DATA_DIR, "nouvelles_annonces.csv")
+    OUTPUT_FILE = os.path.join(DATA_DIR, "predictions_prix_m2.csv")
+
+    result = predict_file(INPUT_FILE, OUTPUT_FILE)
+
+    print(result[["prix_m2_vente_predit"]].head())
