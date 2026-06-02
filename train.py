@@ -163,7 +163,7 @@ def save_artifacts(pipeline, feature_info):
 # MAIN
 # =========================
 
-def main():
+def train_model():
     df = load_main_dataset()
 
     X, y, var_num, var_cat, features = prepare_model_data(df)
@@ -185,8 +185,18 @@ def main():
 
     save_artifacts(pipeline, feature_info)
 
+    return {
+        "message": "Entraînement terminé",
+        "metrics": {
+            "rmse": float(metrics["rmse"]),
+            "mae": float(metrics["mae"]),
+            "r2": float(metrics["r2"]),
+            "n_train": int(metrics["n_train"]),
+            "n_test": int(metrics["n_test"]),
+        }
+    }
+
 
 if __name__ == "__main__":
-    main()
-
-print('entrainement terminé')
+    result = train_model()
+    print(result)

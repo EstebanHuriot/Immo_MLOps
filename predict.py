@@ -19,11 +19,6 @@ feature_info = joblib.load(FEATURE_INFO_PATH)
 
 features = feature_info["features"]
 
-print("Modèle chargé")
-print(f"Nombre de features attendues : {len(features)}")
-
-
-
 
 def predict_file(input_file, output_file):
     
@@ -57,6 +52,8 @@ def predict_one(annonce: dict):
     prediction = model.predict(X)[0]
 
     return round(float(prediction), 2)
+
+
 
 if __name__ == "__main__":
     INPUT_FILE = os.path.join(DATA_DIR, "nouvelles_annonces.csv")
