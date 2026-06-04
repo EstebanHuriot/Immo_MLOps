@@ -1,7 +1,7 @@
 from fastapi import FastAPI, HTTPException
 
-from predict import predict_one, features
-from train import train_model
+from src.predict import predict_one, features
+from src.train import train_model
 
 app = FastAPI(title="Price Prediction API")
 
