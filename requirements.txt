@@ -5,3 +5,4 @@ joblib
 requests
 tqdm
 fastapi
+uvicorn
