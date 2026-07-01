@@ -12,6 +12,8 @@ from sklearn.model_selection import train_test_split
 from sklearn.metrics import mean_squared_error, mean_absolute_error, r2_score
 from sklearn.ensemble import RandomForestRegressor
 
+import mlflow
+import mlflow.sklearn
 
 warnings.filterwarnings("ignore")
 
@@ -36,6 +38,12 @@ BEST_PARAMS = dict(
     random_state=RANDOM_STATE,
     n_jobs=-1,
 )
+
+
+mlflow.set_tracking_uri("http://127.0.0.1:8080")
+mlflow.set_experiment("Model_immo")
+
+
 
 
 # =========================
@@ -168,20 +176,67 @@ def train_model():
 
     X, y, var_num, var_cat, features = prepare_model_data(df)
 
-    pipeline, metrics = train_and_evaluate(
-        X=X,
-        y=y,
-        var_num=var_num,
-        var_cat=var_cat,
-    )
-
     feature_info = {
         "var_num": var_num,
         "var_cat": var_cat,
         "features": features,
         "target": TARGET,
-        **metrics,
     }
+
+    with mlflow.start_run(run_name="random_forest_immo_train"):
+
+        # Logger les paramètres principaux
+        mlflow.log_params(BEST_PARAMS)
+        mlflow.log_param("target", TARGET)
+        mlflow.log_param("n_sample", N_SAMPLE)
+        mlflow.log_param("n_features", len(features))
+        mlflow.log_param("n_features_num", len(var_num))
+        mlflow.log_param("n_features_cat", len(var_cat))
+
+        pipeline, metrics = train_and_evaluate(
+            X=X,
+            y=y,
+            var_num=var_num,
+            var_cat=var_cat,
+        )
+
+        feature_info.update(metrics)
+
+        # Sauvegarde locale avec joblib
+        save_artifacts(pipeline, feature_info)
+
+        # Logger les métriques dans MLflow
+        mlflow.log_metrics({
+            "rmse": float(metrics["rmse"]),
+            "mae": float(metrics["mae"]),
+            "r2": float(metrics["r2"]),
+            "n_train": int(metrics["n_train"]),
+            "n_test": int(metrics["n_test"]),
+        })
+
+        # Logger les fichiers locaux comme artifacts
+        mlflow.log_artifact(os.path.join(MODELS_DIR, "best_model.pkl"))
+        mlflow.log_artifact(os.path.join(MODELS_DIR, "feature_info.pkl"))
+
+        # Logger le modèle complet sklearn dans MLflow
+        mlflow.sklearn.log_model(
+            sk_model=pipeline,
+            artifact_path="model",
+            input_example=X.head(1),
+        )
+
+        print("Modèle loggé dans MLflow")
+
+        return {
+            "message": "Entraînement terminé",
+            "metrics": {
+                "rmse": float(metrics["rmse"]),
+                "mae": float(metrics["mae"]),
+                "r2": float(metrics["r2"]),
+                "n_train": int(metrics["n_train"]),
+                "n_test": int(metrics["n_test"]),
+            }
+        }
 
     save_artifacts(pipeline, feature_info)
 
