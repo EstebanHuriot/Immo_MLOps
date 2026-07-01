@@ -220,10 +220,11 @@ def train_model():
 
         # Logger le modèle complet sklearn dans MLflow
         mlflow.sklearn.log_model(
-            sk_model=pipeline,
-            artifact_path="model",
-            input_example=X.head(1),
-        )
+        sk_model=pipeline,
+        name="model",
+        input_example=X.head(1),
+        serialization_format="cloudpickle",
+            )
 
         print("Modèle loggé dans MLflow")
 
