@@ -6,3 +6,5 @@ requests
 tqdm
 fastapi
 uvicorn
+mlflow
+airflow
