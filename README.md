@@ -6,18 +6,19 @@ The goal of this project is to build a simple MLOps pipeline that collects real 
 ## Project structure
 
 Immo_MLOps/
- │ ├── api.py
+   │
+   ├── api.py
    ├── requirements.txt 
    ├── src/ 
-   │ ├── collect.py 
-   │ ├── process.py 
-   │ ├── train.py 
-   │ ├── predict.py 
-   │ ├── evaluate.py 
-   │ └── fake_new_data.py 
+   │    ├── collect.py 
+   │    ├── process.py 
+   │    ├── train.py 
+   │    ├── predict.py 
+   │    ├── evaluate.py 
+   │    └── fake_new_data.py 
    │ 
    ├── dags/ 
-   │     └── training_pipeline.py 
+   │    └── training_pipeline.py 
    │ 
    ├── data/ 
    └── models/
