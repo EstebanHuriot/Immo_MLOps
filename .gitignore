@@ -10,3 +10,11 @@ data/
 models/
 
 test.ipynb
+
+# Airflow
+logs/
+
+# MLflow
+mlruns/
+mlartifacts/
+mlflow.db

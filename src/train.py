@@ -1,10 +1,14 @@
 import os
+
+os.environ["MLFLOW_ALLOW_FILE_STORE"] = "true"
+
+
 import warnings
 import joblib
 
 import numpy as np
 import pandas as pd
-
+from pathlib import Path
 from sklearn.compose import ColumnTransformer
 from sklearn.preprocessing import OneHotEncoder, StandardScaler
 from sklearn.pipeline import Pipeline
@@ -24,8 +28,12 @@ warnings.filterwarnings("ignore")
 
 RANDOM_STATE = 42
 
-DATA_DIR = "./data/annonces_france"
-MODELS_DIR = "./models"
+PROJECT_ROOT = Path(__file__).resolve().parents[1]
+
+DATA_DIR = PROJECT_ROOT / "data" / "annonces_france"
+MODELS_DIR = PROJECT_ROOT / "models"
+MLRUNS_DIR = PROJECT_ROOT / "mlruns"
+MLRUNS_DIR.mkdir(parents=True, exist_ok=True)
 
 TARGET = "prix_m2_vente"
 
@@ -40,7 +48,7 @@ BEST_PARAMS = dict(
 )
 
 
-mlflow.set_tracking_uri("http://127.0.0.1:8080")
+mlflow.set_tracking_uri(f"file:{MLRUNS_DIR}")
 mlflow.set_experiment("Model_immo")
 
 
@@ -52,7 +60,7 @@ mlflow.set_experiment("Model_immo")
 
 def load_main_dataset():
     df = pd.read_csv(
-        f"{DATA_DIR}/df_france_ventes_cleaned.csv",
+        DATA_DIR / "df_france_ventes_cleaned.csv",
         sep=";",
         low_memory=False,
     )
@@ -155,10 +163,10 @@ def train_and_evaluate(X, y, var_num, var_cat):
 
 
 def save_artifacts(pipeline, feature_info):
-    os.makedirs(MODELS_DIR, exist_ok=True)
+    MODELS_DIR.mkdir(parents=True, exist_ok=True)
 
-    model_path = os.path.join(MODELS_DIR, "best_model.pkl")
-    feature_info_path = os.path.join(MODELS_DIR, "feature_info.pkl")
+    model_path = MODELS_DIR / "best_model.pkl"
+    feature_info_path = MODELS_DIR / "feature_info.pkl"
 
     joblib.dump(pipeline, model_path)
     joblib.dump(feature_info, feature_info_path)
@@ -215,8 +223,8 @@ def train_model():
         })
 
         # Logger les fichiers locaux comme artifacts
-        mlflow.log_artifact(os.path.join(MODELS_DIR, "best_model.pkl"))
-        mlflow.log_artifact(os.path.join(MODELS_DIR, "feature_info.pkl"))
+        mlflow.log_artifact(str(MODELS_DIR / "best_model.pkl"))
+        mlflow.log_artifact(str(MODELS_DIR / "feature_info.pkl"))
 
         # Logger le modèle complet sklearn dans MLflow
         mlflow.sklearn.log_model(
