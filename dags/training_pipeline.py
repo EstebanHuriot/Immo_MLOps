@@ -7,15 +7,15 @@ import sys
 
 @task
 def collect():
-    subprocess.run([sys.executable, "../src/script.py"], check=True)
+    subprocess.run([sys.executable, "/opt/airflow/src/collect.py"], check=True) # docker containter path
 
 @task
 def preprocess():
-    subprocess.run([sys.executable, "../src/process.py"], check=True)
+    subprocess.run([sys.executable, "/opt/airflow/src/process.py"], check=True)
 
 @task
 def train():
-    subprocess.run([sys.executable, "../src/train.py"], check=True)
+    subprocess.run([sys.executable, "/opt/airflow/src/train.py"], check=True)
 
 
 @dag(
