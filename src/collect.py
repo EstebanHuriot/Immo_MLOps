@@ -5,6 +5,7 @@ import os
 from io import StringIO
 from tqdm import tqdm
 import time
+from pathlib import Path
 
 BASE_URL = "https://raw.githubusercontent.com/klopstock-dviz/immo_vis/master/data/annonces_git"
 
@@ -44,16 +45,17 @@ def fetch_csv_from_github(filename, base_url=BASE_URL):
 
 def main():
 
-    OUTPUT_DIR = "../data/annonces_france"
-    os.makedirs(OUTPUT_DIR, exist_ok=True)
+    PROJECT_ROOT = Path(__file__).resolve().parents[1] # must work with the api and the airflow
+    OUTPUT_DIR = PROJECT_ROOT / "data" / "annonces_france"
+    OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 
     print(f"Dossier de sortie: {OUTPUT_DIR}")
     # téléchargement par batch de 10 départements
     BATCH_SIZE = 10
-    OUTPUT_FILE = f"{OUTPUT_DIR}/df_france_ventes.csv"
+    OUTPUT_FILE = OUTPUT_DIR / "df_france_ventes.csv"
 
-    if os.path.exists(OUTPUT_FILE):
-        os.remove(OUTPUT_FILE)
+    if OUTPUT_FILE.exists():
+        OUTPUT_FILE.unlink()
         print(f"Fichier existant supprimé: {OUTPUT_FILE}")
 
     departements_ok = []
@@ -110,9 +112,9 @@ def main():
 
 
     # vérification du fichier final
-    if os.path.exists(OUTPUT_FILE):
+    if OUTPUT_FILE.exists():
         print(f"Fichier créé: {OUTPUT_FILE}")
-        print(f"Taille: {os.path.getsize(OUTPUT_FILE) / 1024**2:.1f} MB")
+        print(f"Taille: {OUTPUT_FILE.stat().st_size / 1024**2:.1f} MB")
 
         chunk_iter = pd.read_csv(OUTPUT_FILE, sep=';', chunksize=10000)
         first_chunk = next(chunk_iter)
