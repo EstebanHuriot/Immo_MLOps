@@ -21,7 +21,7 @@ def train():
 @dag(
     dag_id='model_dag',
     tags=['ImmoMLOps', 'datascientest'],
-    schedule_interval=None,
+    schedule_interval="@daily",
     start_date=datetime(2026, 7, 8), # day I wrote it
     catchup=False
     )
