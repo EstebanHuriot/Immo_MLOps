@@ -1,0 +1,5 @@
+outs:
+- md5: cc8d0d2ae638a9d82a3066c7b50940fd
+  size: 859544744
+  hash: md5
+  path: df_france_ventes_cleaned.csv
