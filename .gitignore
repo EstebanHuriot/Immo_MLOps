@@ -6,8 +6,9 @@ env/
 __pycache__/
 *.pyc
 
-data/
-models/
+# data/ et models/ ne sont plus ignorés en bloc : DVC gère ses propres
+# regles d'ignore pour les fichiers qu'il suit (data/annonces_france/.gitignore,
+# models/.gitignore), tout en laissant Git suivre les fichiers .dvc et le reste.
 
 test.ipynb
 
