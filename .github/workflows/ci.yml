@@ -1,0 +1,33 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout du code
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+
+      - name: Installer les dependances
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Lancer les tests unitaires
+        run: pytest tests/ -v
+
+      - name: Verifier que les Dockerfiles se construisent
+        run: |
+          docker build -f services/prediction_api/Dockerfile -t prediction-api:ci .
+          docker build -f services/training_api/Dockerfile -t training-api:ci .
+          docker build -f services/mlflow_tracking/Dockerfile -t mlflow-tracking:ci .

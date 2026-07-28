@@ -1,13 +1,12 @@
 x-airflow-common: &airflow-common
   image: apache/airflow:2.10.5-python3.11
-
   environment: &airflow-common-env
     AIRFLOW__CORE__EXECUTOR: LocalExecutor
     AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@postgres/airflow
     AIRFLOW__CORE__LOAD_EXAMPLES: "false"
     AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION: "true"
     AIRFLOW__API__AUTH_BACKENDS: "airflow.api.auth.backend.basic_auth"
-
+    MLFLOW_TRACKING_URI: "http://mlflow-tracking:5000"
     _PIP_ADDITIONAL_REQUIREMENTS: >
       pandas
       numpy
@@ -18,7 +17,6 @@ x-airflow-common: &airflow-common
       fastapi
       uvicorn
       mlflow
-
   volumes:
     - ./dags:/opt/airflow/dags
     - ./src:/opt/airflow/src
@@ -26,37 +24,28 @@ x-airflow-common: &airflow-common
     - ./models:/opt/airflow/models
     - ./mlruns:/opt/airflow/mlruns
     - ./logs:/opt/airflow/logs
-
   user: "${AIRFLOW_UID:-50000}:0"
-
   depends_on:
     postgres:
       condition: service_healthy
 
-
 services:
   postgres:
     image: postgres:13
-
     environment:
       POSTGRES_USER: airflow
       POSTGRES_PASSWORD: airflow
       POSTGRES_DB: airflow
-
     volumes:
       - postgres-db-volume:/var/lib/postgresql/data
-
     healthcheck:
       test: ["CMD", "pg_isready", "-U", "airflow"]
       interval: 5s
       retries: 5
-
     restart: always
-
 
   airflow-init:
     <<: *airflow-common
-
     command: >
       bash -c "
       airflow db migrate &&
@@ -68,58 +57,71 @@ services:
       --role Admin
       --email admin@example.com
       "
-
     restart: "no"
-
 
   airflow-webserver:
     <<: *airflow-common
-
     command: webserver
-
     ports:
       - "8081:8080"
-
     restart: always
-
 
   airflow-scheduler:
     <<: *airflow-common
-
     command: scheduler
-
     restart: always
 
+  # --- Tracking des experiences (service dedie, cf. cahier des charges) ---
+  mlflow-tracking:
+    build:
+      context: .
+      dockerfile: services/mlflow_tracking/Dockerfile
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./mlruns:/mlflow/mlruns
+    restart: unless-stopped
 
   prediction-api:
     build:
       context: .
       dockerfile: services/prediction_api/Dockerfile
-
     ports:
       - "8000:8000"
-
     volumes:
       - ./models:/app/models
-
     restart: unless-stopped
-
 
   training-api:
     build:
       context: .
       dockerfile: services/training_api/Dockerfile
-
+    environment:
+      MLFLOW_TRACKING_URI: "http://mlflow-tracking:5000"
     ports:
       - "8001:8001"
-
     volumes:
       - ./data:/app/data
       - ./models:/app/models
       - ./mlruns:/app/mlruns
-
+    depends_on:
+      - mlflow-tracking
     restart: unless-stopped
 
+  # --- Bonus : reverse proxy devant les APIs ---
+  # Desactive par defaut (profile "bonus"). Pour l'activer :
+  #   docker compose --profile bonus up --build
+  nginx:
+    image: nginx:1.27-alpine
+    profiles: ["bonus"]
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    ports:
+      - "8080:80"
+    depends_on:
+      - prediction-api
+      - training-api
+    restart: unless-stopped
 
 volumes:
   postgres-db-volume:
