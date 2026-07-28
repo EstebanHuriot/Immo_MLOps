@@ -108,20 +108,5 @@ services:
       - mlflow-tracking
     restart: unless-stopped
 
-  # --- Bonus : reverse proxy devant les APIs ---
-  # Desactive par defaut (profile "bonus"). Pour l'activer :
-  #   docker compose --profile bonus up --build
-  nginx:
-    image: nginx:1.27-alpine
-    profiles: ["bonus"]
-    volumes:
-      - ./nginx/nginx.conf:/etc/nginx/conf.d/default.conf:ro
-    ports:
-      - "8080:80"
-    depends_on:
-      - prediction-api
-      - training-api
-    restart: unless-stopped
-
 volumes:
   postgres-db-volume:
