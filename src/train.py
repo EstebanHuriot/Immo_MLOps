@@ -120,6 +120,14 @@ def prepare_model_data(df):
     features = var_num + var_cat
     X = X[features]
 
+    # Certaines colonnes categorielles melangent texte / nombres / NaN
+    # (ex: codes IRIS). Ca fait planter OneHotEncoder a l'inference
+    # (TypeError: ufunc 'isnan' not supported...) car les categories_
+    # apprises ont un dtype mixte. On force un type texte homogene ici,
+    # a l'entrainement, pour que ce soit coherent avec predict_one qui
+    # fait la meme conversion cote API.
+    X[var_cat] = X[var_cat].astype(str)
+
     print(f"Features numeriques : {len(var_num)}")
     print(f"Features categorielles : {len(var_cat)}")
     print(f"Total features : {len(features)}")
