@@ -77,7 +77,7 @@ services:
       context: .
       dockerfile: services/mlflow_tracking/Dockerfile
     ports:
-      - "5000:5000"
+      - "5001:5000"
     volumes:
       - ./mlruns:/mlflow/mlruns
     restart: unless-stopped
