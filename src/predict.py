@@ -38,6 +38,18 @@ def get_features():
     return feature_info["features"]
 
 
+def prepare_input(data, feature_info):
+    complete_data = {}
+
+    for feature in feature_info["features"]:
+        if feature in data and data[feature] not in (None, ""):
+            complete_data[feature] = data[feature]
+        else:
+            complete_data[feature] = feature_info["default_values"][feature]
+
+    return complete_data
+
+
 def predict_file(input_file, output_file):
     model, feature_info = _load_artifacts()
     features = feature_info["features"]
@@ -54,23 +66,40 @@ def predict_file(input_file, output_file):
 
 def predict_one(annonce: dict):
     model, feature_info = _load_artifacts()
+
+    # si la colonne est manquante alors on fill avec moyenne/mode selon le type de variable (cf train.py)
     features = feature_info["features"]
     var_cat = feature_info.get("var_cat", [])
-    colonnes_manquantes = [col for col in features if col not in annonce]
-    if colonnes_manquantes:
-        raise ValueError("Colonnes manquantes : " + ", ".join(colonnes_manquantes))
-    X = pd.DataFrame([annonce])[features]
+
+    annonce_complete = prepare_input(annonce, feature_info)
+
+    X = pd.DataFrame([annonce_complete])[features]
+
+
     # Meme conversion de type que celle appliquee a l'entrainement
     # (cf. train.py:prepare_model_data) pour rester coherent avec les
     # categories_ apprises par OneHotEncoder.
     if var_cat:
         X[var_cat] = X[var_cat].astype(str)
+
     prediction = model.predict(X)[0]
+
     return round(float(prediction), 2)
 
 
-if __name__ == "__main__":
+"""if __name__ == "__main__":
     input_file = os.path.join(DATA_DIR, "nouvelles_annonces.csv")
     output_file = os.path.join(DATA_DIR, "predictions_prix_m2.csv")
     result = predict_file(input_file, output_file)
     print(result[["prix_m2_vente_predit"]].head())
+"""
+
+if __name__ == "__main__":
+    test_annonce = {
+        "surface": 75,
+        "nb_pieces": 3,
+        "etage": 2,
+        "typedebien": "Appartement"
+    }
+
+    print("Prediction :", predict_one(test_annonce))
