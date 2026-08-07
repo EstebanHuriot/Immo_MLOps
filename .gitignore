@@ -19,3 +19,5 @@ logs/
 mlruns/
 mlartifacts/
 mlflow.db
+
+.csv

@@ -197,11 +197,21 @@ def train_model():
     df = load_main_dataset()
     X, y, var_num, var_cat, features = prepare_model_data(df)
 
+    # default values for the frontend bit.
+    default_values = {}
+
+    for col in var_num:
+        default_values[col] = float(X[col].mean())
+
+    for col in var_cat:
+        default_values[col] = X[col].mode()[0]
+
     feature_info = {
         "var_num": var_num,
         "var_cat": var_cat,
         "features": features,
         "target": TARGET,
+        "default_values": default_values,
     }
 
     with mlflow.start_run(run_name=MLFLOW_RUN_NAME):
