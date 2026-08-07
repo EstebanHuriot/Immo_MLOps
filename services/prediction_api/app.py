@@ -1,4 +1,5 @@
 from fastapi import FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
 
 from src.predict import predict_one, get_features
 
@@ -8,6 +9,18 @@ app = FastAPI(title="Real estate price prediction API")
 @app.get("/")
 def home():
     return {"message": "API de prediction du prix de l'immobilier"}
+
+# link between front and back
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[
+        "http://127.0.0.1:5500",
+        "http://localhost:5500",
+    ],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 
 @app.get("/features")
