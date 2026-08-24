@@ -108,6 +108,30 @@ services:
       - mlflow-tracking
     restart: unless-stopped
 
+
+  prometheus:
+    image: prom/prometheus:latest
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+    command:
+      - "--config.file=/etc/prometheus/prometheus.yml"
+    depends_on:
+      - prediction-api
+      - training-api
+    restart: unless-stopped
+
+  grafana:
+    image: grafana/grafana:latest
+    ports:
+      - "3000:3000"
+    volumes:
+    - grafana_data:/var/lib/grafana
+    depends_on:
+      - prometheus
+    restart: unless-stopped
+
   # --- Bonus : reverse proxy devant les APIs ---
   # Desactive par defaut (profile "bonus"). Pour l'activer :
   #   docker compose --profile bonus up --build
@@ -125,3 +149,5 @@ services:
 
 volumes:
   postgres-db-volume:
+
+  grafana_data:

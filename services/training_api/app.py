@@ -1,8 +1,11 @@
 from fastapi import FastAPI, HTTPException
+from prometheus_fastapi_instrumentator import Instrumentator
 
 from src.train import train_model
 
 app = FastAPI(title="Real estate training API")
+
+Instrumentator().instrument(app).expose(app) # prometheus
 
 @app.get("/")
 def home():
