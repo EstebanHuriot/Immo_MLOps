@@ -1,0 +1,12 @@
+global:
+  scrape_interval: 15s
+
+scrape_configs:
+
+  - job_name: "prediction-api"
+    static_configs:
+      - targets: ["prediction-api:8000"]
+
+  - job_name: "training-api"
+    static_configs:
+      - targets: ["training-api:8001"]
