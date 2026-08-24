@@ -4,6 +4,10 @@ from src.train import train_model
 
 app = FastAPI(title="Real estate training API")
 
+from prometheus_fastapi_instrumentator import Instrumentator
+
+Instrumentator().instrument(app).expose(app)
+
 @app.get("/")
 def home():
     return {"message":"API de prédiction du prix de l'immobilier"}

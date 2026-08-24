@@ -5,6 +5,9 @@ from src.predict import predict_one, get_features
 
 app = FastAPI(title="Real estate price prediction API")
 
+from prometheus_fastapi_instrumentator import Instrumentator
+
+Instrumentator().instrument(app).expose(app)
 
 @app.get("/")
 def home():
