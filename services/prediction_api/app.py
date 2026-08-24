@@ -1,9 +1,12 @@
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from prometheus_fastapi_instrumentator import Instrumentator
 
 from src.predict import predict_one, get_features
 
 app = FastAPI(title="Real estate price prediction API")
+
+Instrumentator().instrument(app).expose(app) # prometheus 
 
 
 @app.get("/")
