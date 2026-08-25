@@ -146,27 +146,6 @@ services:
       - prediction-api
       - training-api
     restart: unless-stopped
-  
-  prometheus:
-    image: prom/prometheus:latest
-    volumes:
-      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
-    ports:
-      - "9090:9090"
-    depends_on:
-      - prediction-api
-      - training-api
-    restart: unless-stopped
-
-  grafana:
-    image: grafana/grafana:latest
-    ports:
-      - "3000:3000"
-    environment:
-      GF_SECURITY_ADMIN_PASSWORD: admin
-    depends_on:
-      - prometheus
-    restart: unless-stopped
 
 volumes:
   postgres-db-volume:
