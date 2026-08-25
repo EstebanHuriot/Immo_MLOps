@@ -1,7 +1,11 @@
-from fastapi import FastAPI, HTTPException
+import os
+import secrets
+from fastapi import FastAPI, HTTPException, Depends
+from fastapi.security import APIKeyHeader
 from fastapi.middleware.cors import CORSMiddleware
 from prometheus_fastapi_instrumentator import Instrumentator
 from prometheus_client import Counter, Gauge
+
 
 from src.predict import predict_one, get_features
 
@@ -21,9 +25,24 @@ surface_count = 0
 
 app = FastAPI(title="Real estate price prediction API")
 
-from prometheus_fastapi_instrumentator import Instrumentator
-
 Instrumentator().instrument(app).expose(app)
+
+
+api_key_header = APIKeyHeader(
+    name="X-API-Key",
+    auto_error=False,
+)
+
+
+def verify_api_key(api_key: str = Depends(api_key_header)):
+    expected_api_key = os.getenv("API_KEY")
+
+    if not expected_api_key:
+        raise HTTPException(status_code=500, detail="API key is not configured",)
+
+    if not api_key or not secrets.compare_digest(api_key, expected_api_key):
+        raise HTTPException(status_code=401,detail="Invalid or missing API key",)
+    
 
 @app.get("/")
 def home():
@@ -53,7 +72,7 @@ def features_endpoint():
 
 
 @app.post("/predict")
-def predict(annonce: dict):
+def predict(annonce: dict, _: str = Depends(verify_api_key)):
     global total_predicted_price, total_predictions
     global total_surface, surface_count
 

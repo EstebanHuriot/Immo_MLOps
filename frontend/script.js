@@ -100,7 +100,8 @@ form.addEventListener("submit", async function (event) {
                 method: "POST",
 
                 headers: {
-                    "Content-Type": "application/json"
+                    "Content-Type": "application/json",
+                    "X-API-Key": "123123"
                 },
 
                 body: JSON.stringify(data)

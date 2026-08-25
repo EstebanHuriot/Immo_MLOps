@@ -24,3 +24,5 @@ mlruns_backup/
 mlruns/
 
 *.csv
+
+.env
