@@ -20,4 +20,4 @@ mlruns/
 mlartifacts/
 mlflow.db
 
-.csv
+*.csv
