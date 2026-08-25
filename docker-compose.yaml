@@ -7,6 +7,7 @@ x-airflow-common: &airflow-common
     AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION: "true"
     AIRFLOW__API__AUTH_BACKENDS: "airflow.api.auth.backend.basic_auth"
     MLFLOW_TRACKING_URI: "http://mlflow-tracking:5000"
+    AIRFLOW__WEBSERVER__WEB_SERVER_MASTER_TIMEOUT: "300"
     _PIP_ADDITIONAL_REQUIREMENTS: >
       pandas
       numpy
@@ -16,7 +17,7 @@ x-airflow-common: &airflow-common
       tqdm
       fastapi
       uvicorn
-      mlflow
+      mlflow==3.15.1
   volumes:
     - ./dags:/opt/airflow/dags
     - ./src:/opt/airflow/src
@@ -78,8 +79,9 @@ services:
       dockerfile: services/mlflow_tracking/Dockerfile
     ports:
       - "5001:5000"
+    user: "50000:0"
     volumes:
-      - ./mlruns:/mlflow/mlruns
+      - ./mlruns:/opt/airflow/mlruns
     restart: unless-stopped
 
   prediction-api:

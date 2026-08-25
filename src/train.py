@@ -27,7 +27,7 @@ MLRUNS_DIR = PROJECT_ROOT / "mlruns"
 MLRUNS_DIR.mkdir(parents=True, exist_ok=True)
 
 TARGET = "prix_m2_vente"
-N_SAMPLE = int(os.environ.get("N_SAMPLE", 100_000))
+N_SAMPLE = int(os.environ.get("N_SAMPLE", 1000))
 
 def _env_int_or_none(name, default):
     value = os.environ.get(name, default)
@@ -40,11 +40,11 @@ def _env_int_or_none(name, default):
 # "baseline" (rapide, volontairement plus simple) avant le run final, et
 # comparer les deux dans MLflow/DagsHub (onglet Experiments -> Compare).
 BEST_PARAMS = dict(
-    n_estimators=int(os.environ.get("N_ESTIMATORS", 200)),
+    n_estimators=int(os.environ.get("N_ESTIMATORS", 20)),
     max_depth=_env_int_or_none("MAX_DEPTH", None),
     min_samples_leaf=1,
     random_state=RANDOM_STATE,
-    n_jobs=-1,
+    n_jobs=2,
 )
 
 MLFLOW_RUN_NAME = os.environ.get("MLFLOW_RUN_NAME", "random_forest_immo_train")
@@ -243,12 +243,12 @@ def train_model():
         mlflow.log_artifact(str(MODELS_DIR / "best_model.pkl"))
         mlflow.log_artifact(str(MODELS_DIR / "feature_info.pkl"))
 
-        mlflow.sklearn.log_model(
-            sk_model=pipeline,
-            name="model",
-            input_example=X.head(1),
-            serialization_format="cloudpickle",
-        )
+    #    mlflow.sklearn.log_model(
+    #        sk_model=pipeline,
+    #        name="model",
+    #        input_example=X.head(1),
+    #        serialization_format="cloudpickle",
+    #    )
         print("Modele logge dans MLflow")
 
         return {

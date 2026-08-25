@@ -20,4 +20,7 @@ mlruns/
 mlartifacts/
 mlflow.db
 
+mlruns_backup/
+mlruns/
+
 *.csv
