@@ -1,5 +1,5 @@
 outs:
-- md5: f2bb52d1e616c605423c9fb5fe1aa45f
-  size: 754
+- md5: a5961399da0a7c5e7ad2f73504c64305
+  size: 1049
   hash: md5
   path: feature_info.pkl
