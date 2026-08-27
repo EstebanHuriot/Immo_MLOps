@@ -84,7 +84,9 @@ services:
       - ./mlruns:/opt/airflow/mlruns
     restart: unless-stopped
 
-  prediction-api:
+  # --- prediction-api en 2 instances pour le load balancing nginx ---
+  # (cf. nginx/nginx.conf, bloc upstream prediction_api)
+  prediction-api-1:
     build:
       context: .
       dockerfile: services/prediction_api/Dockerfile
@@ -92,6 +94,18 @@ services:
       API_KEY: ${API_KEY}
     ports:
       - "8000:8000"
+    volumes:
+      - ./models:/app/models
+    restart: unless-stopped
+
+  prediction-api-2:
+    build:
+      context: .
+      dockerfile: services/prediction_api/Dockerfile
+    environment:
+      API_KEY: ${API_KEY}
+    ports:
+      - "8002:8000"
     volumes:
       - ./models:/app/models
     restart: unless-stopped
@@ -123,7 +137,8 @@ services:
     command:
       - "--config.file=/etc/prometheus/prometheus.yml"
     depends_on:
-      - prediction-api
+      - prediction-api-1
+      - prediction-api-2
       - training-api
     restart: unless-stopped
 
@@ -131,8 +146,13 @@ services:
     image: grafana/grafana:latest
     ports:
       - "3000:3000"
+    environment:
+      GF_AUTH_ANONYMOUS_ENABLED: "true"
+      GF_AUTH_ANONYMOUS_ORG_ROLE: "Viewer"
     volumes:
-    - grafana_data:/var/lib/grafana
+      - grafana_data:/var/lib/grafana
+      - ./monitoring/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./monitoring/grafana/dashboards:/var/lib/grafana/dashboards:ro
     depends_on:
       - prometheus
     restart: unless-stopped
@@ -148,7 +168,8 @@ services:
     ports:
       - "8080:80"
     depends_on:
-      - prediction-api
+      - prediction-api-1
+      - prediction-api-2
       - training-api
     restart: unless-stopped
 

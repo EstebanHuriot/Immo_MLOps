@@ -4,18 +4,32 @@ Tests unitaires pour le microservice training-api.
 train_model est monkeypatche directement dans le module
 services.training_api.app pour ne jamais lancer un vrai entrainement
 (couteux, depend de data/annonces_france/*.csv) pendant la CI.
+
+/train exige une cle API (header X-API-Key), meme mecanisme que
+prediction-api. La CI definit API_KEY=test-key-ci (voir
+.github/workflows/ci.yml).
 """
+import os
 import services.training_api.app as app_module
 from services.training_api.app import app
 from fastapi.testclient import TestClient
 
 client = TestClient(app)
 
+API_KEY = os.environ.setdefault("API_KEY", "test-key-ci")
+AUTH_HEADERS = {"X-API-Key": API_KEY}
+
 
 def test_home():
     response = client.get("/")
     assert response.status_code == 200
     assert "message" in response.json()
+
+
+def test_train_returns_401_without_api_key(monkeypatch):
+    monkeypatch.setattr(app_module, "train_model", lambda: {"message": "ok", "metrics": {}})
+    response = client.post("/train")
+    assert response.status_code == 401
 
 
 def test_train_success(monkeypatch):
@@ -25,7 +39,7 @@ def test_train_success(monkeypatch):
     }
     monkeypatch.setattr(app_module, "train_model", lambda: fake_result)
 
-    response = client.post("/train")
+    response = client.post("/train", headers=AUTH_HEADERS)
     assert response.status_code == 200
     body = response.json()
     assert body["message"] == "Entrainement termine"
@@ -39,5 +53,5 @@ def test_train_failure_returns_500(monkeypatch):
 
     monkeypatch.setattr(app_module, "train_model", _raise)
 
-    response = client.post("/train")
+    response = client.post("/train", headers=AUTH_HEADERS)
     assert response.status_code == 500

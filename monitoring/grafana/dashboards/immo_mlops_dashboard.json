@@ -1,0 +1,111 @@
+{
+  "title": "Immo_MLOps - APIs",
+  "uid": "immo-mlops-apis",
+  "schemaVersion": 39,
+  "version": 1,
+  "refresh": "10s",
+  "time": { "from": "now-1h", "to": "now" },
+  "panels": [
+    {
+      "id": 1,
+      "type": "timeseries",
+      "title": "Requetes par seconde (par API)",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "sum(rate(http_requests_total[1m])) by (job)",
+          "legendFormat": "{{job}}"
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "type": "timeseries",
+      "title": "Latence p95 des requetes (secondes)",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 0 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket[5m])) by (le, job))",
+          "legendFormat": "{{job}} p95"
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "type": "stat",
+      "title": "Nombre total de predictions",
+      "gridPos": { "h": 6, "w": 6, "x": 0, "y": 8 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "sum(model_predictions_total)"
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "type": "stat",
+      "title": "Prix moyen predit (EUR/m2)",
+      "gridPos": { "h": 6, "w": 6, "x": 6, "y": 8 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "model_average_predicted_price_euros"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": { "unit": "currencyEUR" },
+        "overrides": []
+      }
+    },
+    {
+      "id": 5,
+      "type": "gauge",
+      "title": "Drift surface (ecart vs entrainement)",
+      "gridPos": { "h": 6, "w": 6, "x": 12, "y": 8 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "model_surface_drift_ratio"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percentunit",
+          "min": 0,
+          "max": 1,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "orange", "value": 0.2 },
+              { "color": "red", "value": 0.4 }
+            ]
+          }
+        },
+        "overrides": []
+      }
+    },
+    {
+      "id": 6,
+      "type": "timeseries",
+      "title": "Taux d'erreur HTTP (4xx/5xx) par seconde",
+      "gridPos": { "h": 6, "w": 6, "x": 18, "y": 8 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "sum(rate(http_requests_total{status=~\"4..|5..\"}[1m])) by (job)",
+          "legendFormat": "{{job}}"
+        }
+      ]
+    }
+  ]
+}

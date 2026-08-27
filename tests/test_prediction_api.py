@@ -4,12 +4,20 @@ Tests unitaires pour le microservice prediction-api.
 Ils ne dependent pas d'un modele reellement entraine : predict_one et
 get_features sont monkeypatchees directement dans le module
 services.prediction_api.app (c'est la qu'elles sont importees et utilisees).
+
+/predict exige une cle API (header X-API-Key), verifiee contre la variable
+d'environnement API_KEY. La CI definit API_KEY=test-key-ci (voir
+.github/workflows/ci.yml) ; on reutilise la meme valeur ici.
 """
+import os
 import services.prediction_api.app as app_module
 from services.prediction_api.app import app
 from fastapi.testclient import TestClient
 
 client = TestClient(app)
+
+API_KEY = os.environ.setdefault("API_KEY", "test-key-ci")
+AUTH_HEADERS = {"X-API-Key": API_KEY}
 
 
 def test_home():
@@ -34,12 +42,26 @@ def test_features_returns_list_when_model_present(monkeypatch):
     assert response.json() == {"features": ["surface", "ville"]}
 
 
+def test_predict_returns_401_without_api_key(monkeypatch):
+    monkeypatch.setattr(app_module, "predict_one", lambda annonce: 3500.0)
+    response = client.post("/predict", json={"surface": 50})
+    assert response.status_code == 401
+
+
+def test_predict_returns_401_with_wrong_api_key(monkeypatch):
+    monkeypatch.setattr(app_module, "predict_one", lambda annonce: 3500.0)
+    response = client.post(
+        "/predict", json={"surface": 50}, headers={"X-API-Key": "mauvaise-cle"}
+    )
+    assert response.status_code == 401
+
+
 def test_predict_returns_503_when_no_model(monkeypatch):
     def _raise_not_found(annonce):
         raise FileNotFoundError("Modele introuvable.")
 
     monkeypatch.setattr(app_module, "predict_one", _raise_not_found)
-    response = client.post("/predict", json={"surface": 50})
+    response = client.post("/predict", json={"surface": 50}, headers=AUTH_HEADERS)
     assert response.status_code == 503
 
 
@@ -48,12 +70,12 @@ def test_predict_returns_400_on_bad_input(monkeypatch):
         raise ValueError("Colonnes manquantes : surface")
 
     monkeypatch.setattr(app_module, "predict_one", _raise_value_error)
-    response = client.post("/predict", json={})
+    response = client.post("/predict", json={}, headers=AUTH_HEADERS)
     assert response.status_code == 400
 
 
 def test_predict_returns_price_on_success(monkeypatch):
     monkeypatch.setattr(app_module, "predict_one", lambda annonce: 3500.0)
-    response = client.post("/predict", json={"surface": 50})
+    response = client.post("/predict", json={"surface": 50}, headers=AUTH_HEADERS)
     assert response.status_code == 200
     assert response.json() == {"prix": 3500.0}

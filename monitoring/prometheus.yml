@@ -5,7 +5,7 @@ scrape_configs:
 
   - job_name: "prediction-api"
     static_configs:
-      - targets: ["prediction-api:8000"]
+      - targets: ["prediction-api-1:8000", "prediction-api-2:8000"]
 
   - job_name: "training-api"
     static_configs:

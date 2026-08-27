@@ -24,6 +24,8 @@ jobs:
           pip install -r requirements.txt
 
       - name: Lancer les tests unitaires
+        env:
+          API_KEY: test-key-ci
         run: pytest tests/ -v
 
       - name: Verifier que les Dockerfiles se construisent

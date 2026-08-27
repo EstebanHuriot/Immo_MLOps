@@ -12,3 +12,4 @@ dvc
 dagshub
 pytest
 httpx
+prometheus-fastapi-instrumentator
